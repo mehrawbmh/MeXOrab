@@ -1,5 +1,5 @@
 import './App.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { calculateWinner, type CellValue } from './game'
 
 function App() {
@@ -21,6 +21,7 @@ function App() {
   )
   const [forcedWinner, setForcedWinner] = useState<'X' | 'O' | null>(null)
   const [historyOpen, setHistoryOpen] = useState<boolean>(false)
+  const resetTimerRef = useRef<number | null>(null)
 
   const result = calculateWinner(board)
   const isDraw = !result && board.every((c) => c !== null)
@@ -62,6 +63,11 @@ function App() {
     // Reset history and step
     setHistory([Array<CellValue>(9).fill(null)])
     setStepNumber(0)
+    setForcedWinner(null)
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current)
+      resetTimerRef.current = null
+    }
   }
 
   function jumpTo(step: number): void {
@@ -105,11 +111,34 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadlineTs, nowTs, stepNumber, history.length, result, board, forcedWinner])
 
+  // Auto reset 1s after a win and credit scoreboard for normal (non-timeout) wins
+  useEffect(() => {
+    if (!displayWinner) return
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current)
+      resetTimerRef.current = null
+    }
+    const id = window.setTimeout(() => {
+      if (!forcedWinner && result) {
+        setScore((s) => ({ ...s, [result.winner]: s[result.winner] + 1 }))
+      }
+      setHistory([Array<CellValue>(9).fill(null)])
+      setStepNumber(0)
+      setForcedWinner(null)
+    }, 1000)
+    resetTimerRef.current = id
+    return () => {
+      clearTimeout(id)
+      resetTimerRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayWinner])
+
   return (
     <div className="app">
       <header className="header">
         <h1 className="title">MeXOrab</h1>
-        <p className="subtitle">Phase 4: Scoreboard, names, history, starter</p>
+        <p className="subtitle">simple XO game created by Mehrab</p>
       </header>
 
       <div className="controls">
