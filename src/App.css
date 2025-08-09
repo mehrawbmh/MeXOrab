@@ -28,7 +28,7 @@
 
 .controls {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
@@ -64,6 +64,11 @@
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.35);
   margin: 0 auto; /* center board */
+}
+
+.board-wrap {
+  display: grid;
+  place-items: center; /* strong centering */
 }
 
 .cell {
@@ -162,19 +167,21 @@
 }
 
 /* History menu (collapsed by default) */
-.menu-toggle {
-  margin-left: auto;
-  border-radius: 8px;
+.icon-button {
+  justify-self: end;
+  border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.12);
   padding: 0.4rem 0.6rem;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.06);
   color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .history-menu {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   z-index: 20;
   min-width: 200px;
   max-height: 60vh;

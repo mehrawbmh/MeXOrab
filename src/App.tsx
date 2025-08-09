@@ -36,6 +36,7 @@ function App() {
     if (!deadlineTs) return 0
     return Math.max(0, deadlineTs - nowTs)
   }, [deadlineTs, nowTs])
+  const timerActive = Boolean(deadlineTs) && !displayWinner && !isDraw
 
   function currentPlayer(): 'X' | 'O' {
     const isEven = stepNumber % 2 === 0
@@ -64,6 +65,7 @@ function App() {
     setHistory([Array<CellValue>(9).fill(null)])
     setStepNumber(0)
     setForcedWinner(null)
+    setDeadlineTs(null)
     if (resetTimerRef.current) {
       clearTimeout(resetTimerRef.current)
       resetTimerRef.current = null
@@ -78,11 +80,12 @@ function App() {
     setScore({ X: 0, O: 0, Draws: 0 })
   }
 
-  // Ticker
+  // Ticker (only while timer is active)
   useEffect(() => {
-    const id = setInterval(() => setNowTs(Date.now()), 100)
-    return () => clearInterval(id)
-  }, [])
+    if (!timerActive) return
+    const id = window.setInterval(() => setNowTs(Date.now()), 100)
+    return () => window.clearInterval(id)
+  }, [timerActive])
 
   // Reset deadline whenever it's a playable latest position without result
   useEffect(() => {
@@ -155,9 +158,11 @@ function App() {
             ? 'Draw'
             : `Next: ${currentPlayer() === 'X' ? playerXName : playerOName}`}
         </div>
-        <div className="timer" aria-label="Time remaining">
-          {(remainingMs / 1000).toFixed(1)}s
-        </div>
+        {timerActive && (
+          <div className="timer" aria-label="Time remaining">
+            {(remainingMs / 1000).toFixed(1)}s
+          </div>
+        )}
         <div className="buttons">
           <button className="reset" onClick={resetGame} aria-label="Reset game">
             Reset
@@ -170,6 +175,16 @@ function App() {
             Reset score
           </button>
         </div>
+        <button
+          className="icon-button"
+          aria-expanded={historyOpen}
+          aria-controls="history-menu"
+          onClick={() => setHistoryOpen((v) => !v)}
+          title="Toggle history menu"
+          aria-label="Toggle history"
+        >
+          ☰
+        </button>
       </div>
 
       <section className="panel" aria-label="Settings and scoreboard">
@@ -205,15 +220,7 @@ function App() {
               Change starter when a new game begins
             </span>
           )}
-          <button
-            className="menu-toggle"
-            aria-expanded={historyOpen}
-            aria-controls="history-menu"
-            onClick={() => setHistoryOpen((v) => !v)}
-            title="Toggle history menu"
-          >
-            ===
-          </button>
+          
         </div>
 
         <div className="scoreboard" role="group" aria-label="Scoreboard">
@@ -232,28 +239,30 @@ function App() {
         </div>
       </section>
 
-      <div
-        className="board"
-        role="grid"
-        aria-label="Tic Tac Toe board"
-        aria-describedby="status"
-      >
-        {board.map((value, index) => (
-          <button
-            key={index}
-            role="gridcell"
-            className={[
-              'cell',
-              value === 'X' ? 'x' : value === 'O' ? 'o' : '',
-              winningLine && winningLine.includes(index) ? 'win' : '',
-            ].join(' ').trim()}
-            aria-label={`cell ${index + 1}`}
-            onClick={() => handleCellClick(index)}
-            disabled={Boolean(result) || value !== null}
-          >
-            {value ?? ''}
-          </button>
-        ))}
+      <div className="board-wrap">
+        <div
+          className="board"
+          role="grid"
+          aria-label="Tic Tac Toe board"
+          aria-describedby="status"
+        >
+          {board.map((value, index) => (
+            <button
+              key={index}
+              role="gridcell"
+              className={[
+                'cell',
+                value === 'X' ? 'x' : value === 'O' ? 'o' : '',
+                winningLine && winningLine.includes(index) ? 'win' : '',
+              ].join(' ').trim()}
+              aria-label={`cell ${index + 1}`}
+              onClick={() => handleCellClick(index)}
+              disabled={Boolean(displayWinner) || isDraw || value !== null}
+            >
+              {value ?? ''}
+            </button>
+          ))}
+        </div>
       </div>
 
       <section
