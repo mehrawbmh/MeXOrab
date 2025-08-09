@@ -19,10 +19,13 @@ function App() {
   const [score, setScore] = useState<{ X: number; O: number; Draws: number}>(
     { X: 0, O: 0, Draws: 0 },
   )
+  const [forcedWinner, setForcedWinner] = useState<'X' | 'O' | null>(null)
+  const [historyOpen, setHistoryOpen] = useState<boolean>(false)
 
   const result = calculateWinner(board)
   const isDraw = !result && board.every((c) => c !== null)
   const winningLine = result?.line ?? null
+  const displayWinner: 'X' | 'O' | null = forcedWinner ?? result?.winner ?? null
 
   // Timer per move (5 seconds)
   const MOVE_TIME_MS = 5000
@@ -78,28 +81,29 @@ function App() {
   // Reset deadline whenever it's a playable latest position without result
   useEffect(() => {
     const atLatest = stepNumber === history.length - 1
-    if (atLatest && !result) {
+    if (atLatest && !result && !forcedWinner) {
       setDeadlineTs(Date.now() + MOVE_TIME_MS)
     } else {
       setDeadlineTs(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepNumber, history.length, result])
+  }, [stepNumber, history.length, result, forcedWinner])
 
   // Auto-move when time runs out
   useEffect(() => {
     if (!deadlineTs) return
     const atLatest = stepNumber === history.length - 1
-    if (!atLatest || result) return
+    if (!atLatest || result || forcedWinner) return
     if (deadlineTs - nowTs <= 0) {
-      // choose first empty cell
-      const idx = board.findIndex((c) => c === null)
-      if (idx >= 0) {
-        handleCellClick(idx)
-      }
+      // time up: current player loses, opponent wins
+      const loser = currentPlayer()
+      const winner: 'X' | 'O' = loser === 'X' ? 'O' : 'X'
+      setForcedWinner(winner)
+      setScore((s) => ({ ...s, [winner]: s[winner] + 1 }))
+      setDeadlineTs(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deadlineTs, nowTs, stepNumber, history.length, result, board])
+  }, [deadlineTs, nowTs, stepNumber, history.length, result, board, forcedWinner])
 
   return (
     <div className="app">
@@ -116,8 +120,8 @@ function App() {
           aria-live="polite"
           aria-atomic="true"
         >
-          {result
-            ? `Winner: ${result.winner === 'X' ? playerXName : playerOName}`
+          {displayWinner
+            ? `Winner: ${displayWinner === 'X' ? playerXName : playerOName}`
             : isDraw
             ? 'Draw'
             : `Next: ${currentPlayer() === 'X' ? playerXName : playerOName}`}
@@ -172,6 +176,15 @@ function App() {
               Change starter when a new game begins
             </span>
           )}
+          <button
+            className="menu-toggle"
+            aria-expanded={historyOpen}
+            aria-controls="history-menu"
+            onClick={() => setHistoryOpen((v) => !v)}
+            title="Toggle history menu"
+          >
+            ===
+          </button>
         </div>
 
         <div className="scoreboard" role="group" aria-label="Scoreboard">
@@ -214,23 +227,39 @@ function App() {
         ))}
       </div>
 
-      <section className="history" aria-label="Move history">
-        {history.map((_, move) => {
-          const desc = move === 0 ? 'Go to start' : `Go to move #${move}`
-          return (
-            <button
-              key={move}
-              className={['history-btn', move === stepNumber ? 'active' : '']
-                .join(' ')
-                .trim()}
-              onClick={() => jumpTo(move)}
-              disabled={move === stepNumber}
-            >
-              {desc}
-            </button>
-          )
-        })}
+      <section
+        id="history-menu"
+        className={["history-menu", historyOpen ? "open" : ""].join(" ").trim()}
+        aria-label="Move history"
+        hidden={!historyOpen}
+      >
+        <div className="history-list">
+          {history.map((_, move) => {
+            const desc = move === 0 ? 'Go to start' : `Go to move #${move}`
+            return (
+              <button
+                key={move}
+                className={['history-btn', move === stepNumber ? 'active' : '']
+                  .join(' ')
+                  .trim()}
+                onClick={() => jumpTo(move)}
+                disabled={move === stepNumber}
+              >
+                {desc}
+              </button>
+            )
+          })}
+        </div>
       </section>
+
+      {displayWinner && (
+        <div className="win-overlay" aria-live="polite">
+          <div className="win-message">
+            {displayWinner === 'X' ? playerXName : playerOName} wins!
+          </div>
+          <div className="confetti" aria-hidden="true" />
+        </div>
+      )}
     </div>
   )
 }
