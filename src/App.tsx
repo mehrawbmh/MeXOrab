@@ -10,6 +10,9 @@ function App() {
   const [stepNumber, setStepNumber] = useState<number>(0)
   const board = history[stepNumber]
 
+  // Start gate
+  const [started, setStarted] = useState<boolean>(false)
+
   // Players and starter
   const [startingPlayer, setStartingPlayer] = useState<'X' | 'O'>('X')
   const [playerXName, setPlayerXName] = useState<string>('Player X')
@@ -36,7 +39,7 @@ function App() {
     if (!deadlineTs) return 0
     return Math.max(0, deadlineTs - nowTs)
   }, [deadlineTs, nowTs])
-  const timerActive = Boolean(deadlineTs) && !displayWinner && !isDraw
+  const timerActive = Boolean(deadlineTs) && !displayWinner && !isDraw && started
 
   function currentPlayer(): 'X' | 'O' {
     const isEven = stepNumber % 2 === 0
@@ -90,19 +93,19 @@ function App() {
   // Reset deadline whenever it's a playable latest position without result
   useEffect(() => {
     const atLatest = stepNumber === history.length - 1
-    if (atLatest && !result && !forcedWinner) {
+    if (started && atLatest && !result && !forcedWinner) {
       setDeadlineTs(Date.now() + MOVE_TIME_MS)
     } else {
       setDeadlineTs(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepNumber, history.length, result, forcedWinner])
+  }, [started, stepNumber, history.length, result, forcedWinner])
 
-  // Auto-move when time runs out
+  // Auto-move or timeout win when time runs out
   useEffect(() => {
     if (!deadlineTs) return
     const atLatest = stepNumber === history.length - 1
-    if (!atLatest || result || forcedWinner) return
+    if (!started || !atLatest || result || forcedWinner) return
     if (deadlineTs - nowTs <= 0) {
       // time up: current player loses, opponent wins
       const loser = currentPlayer()
@@ -112,7 +115,7 @@ function App() {
       setDeadlineTs(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deadlineTs, nowTs, stepNumber, history.length, result, board, forcedWinner])
+  }, [deadlineTs, nowTs, stepNumber, history.length, result, board, forcedWinner, started])
 
   // Auto reset 1s after a win and credit scoreboard for normal (non-timeout) wins
   useEffect(() => {
@@ -152,7 +155,9 @@ function App() {
           aria-live="polite"
           aria-atomic="true"
         >
-          {displayWinner
+          {!started
+            ? 'Press Play to start'
+            : displayWinner
             ? `Winner: ${displayWinner === 'X' ? playerXName : playerOName}`
             : isDraw
             ? 'Draw'
@@ -257,7 +262,7 @@ function App() {
               ].join(' ').trim()}
               aria-label={`cell ${index + 1}`}
               onClick={() => handleCellClick(index)}
-              disabled={Boolean(displayWinner) || isDraw || value !== null}
+              disabled={!started || Boolean(displayWinner) || isDraw || value !== null}
             >
               {value ?? ''}
             </button>
@@ -296,6 +301,14 @@ function App() {
             {displayWinner === 'X' ? playerXName : playerOName} wins!
           </div>
           <div className="confetti" aria-hidden="true" />
+        </div>
+      )}
+
+      {!started && (
+        <div className="start-overlay">
+          <button className="play-button-large" onClick={() => setStarted(true)}>
+            ▶ Play
+          </button>
         </div>
       )}
     </div>
