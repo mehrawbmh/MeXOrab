@@ -1,8 +1,8 @@
 /* App layout */
 #root {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1rem;
 }
 
 .header {
@@ -12,7 +12,7 @@
 
 .title {
   margin: 0 0 0.25rem 0;
-  font-size: 2rem;
+  font-size: 1.6rem;
 }
 
 .subtitle {
@@ -57,11 +57,11 @@
 /* Board */
 .board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, 100px);
+  gap: 6px;
   background: linear-gradient(180deg, #2a2a2a, #1b1b1b);
-  padding: 8px;
-  border-radius: 12px;
+  padding: 6px;
+  border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.35);
 }
 
@@ -69,10 +69,10 @@
   aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
-  font-size: 2.25rem;
+  font-size: 1.8rem;
   font-weight: 700;
   border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(255,255,255,0.03);
   color: #eaeaea;
   transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease;

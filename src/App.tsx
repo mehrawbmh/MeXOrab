@@ -1,5 +1,5 @@
 import './App.css'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { calculateWinner, type CellValue } from './game'
 
 function App() {
@@ -23,6 +23,15 @@ function App() {
   const result = calculateWinner(board)
   const isDraw = !result && board.every((c) => c !== null)
   const winningLine = result?.line ?? null
+
+  // Timer per move (5 seconds)
+  const MOVE_TIME_MS = 5000
+  const [deadlineTs, setDeadlineTs] = useState<number | null>(null)
+  const [nowTs, setNowTs] = useState<number>(() => Date.now())
+  const remainingMs = useMemo(() => {
+    if (!deadlineTs) return 0
+    return Math.max(0, deadlineTs - nowTs)
+  }, [deadlineTs, nowTs])
 
   function currentPlayer(): 'X' | 'O' {
     const isEven = stepNumber % 2 === 0
@@ -56,6 +65,42 @@ function App() {
     setStepNumber(step)
   }
 
+  function resetScoreboard(): void {
+    setScore({ X: 0, O: 0, Draws: 0 })
+  }
+
+  // Ticker
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 100)
+    return () => clearInterval(id)
+  }, [])
+
+  // Reset deadline whenever it's a playable latest position without result
+  useEffect(() => {
+    const atLatest = stepNumber === history.length - 1
+    if (atLatest && !result) {
+      setDeadlineTs(Date.now() + MOVE_TIME_MS)
+    } else {
+      setDeadlineTs(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepNumber, history.length, result])
+
+  // Auto-move when time runs out
+  useEffect(() => {
+    if (!deadlineTs) return
+    const atLatest = stepNumber === history.length - 1
+    if (!atLatest || result) return
+    if (deadlineTs - nowTs <= 0) {
+      // choose first empty cell
+      const idx = board.findIndex((c) => c === null)
+      if (idx >= 0) {
+        handleCellClick(idx)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deadlineTs, nowTs, stepNumber, history.length, result, board])
+
   return (
     <div className="app">
       <header className="header">
@@ -77,9 +122,21 @@ function App() {
             ? 'Draw'
             : `Next: ${currentPlayer() === 'X' ? playerXName : playerOName}`}
         </div>
-        <button className="reset" onClick={resetGame} aria-label="Reset game">
-          Reset
-        </button>
+        <div className="timer" aria-label="Time remaining">
+          {(remainingMs / 1000).toFixed(1)}s
+        </div>
+        <div className="buttons">
+          <button className="reset" onClick={resetGame} aria-label="Reset game">
+            Reset
+          </button>
+          <button
+            className="reset"
+            onClick={resetScoreboard}
+            aria-label="Reset scoreboard"
+          >
+            Reset score
+          </button>
+        </div>
       </div>
 
       <section className="panel" aria-label="Settings and scoreboard">
