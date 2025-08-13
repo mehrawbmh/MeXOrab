@@ -127,6 +127,27 @@ export function Board(props: BoardProps) {
     }
   }
 
+  // After a move, the previously focused cell may become disabled.
+  // Keep the grid focused and move focus to a valid cell to maintain keyboard flow.
+  useEffect(() => {
+    if (!started || displayWinner || isDraw) return
+    // Ensure grid retains focus for key handling
+    gridRef.current?.focus()
+    // If focused cell is now disabled, move to the first enabled cell
+    if (focusedIndex != null) {
+      const btn = cellRefs.current[focusedIndex]
+      if (!btn || btn.disabled) {
+        for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+          const candidate = cellRefs.current[i]
+          if (candidate && !candidate.disabled) {
+            focusIndex(i)
+            break
+          }
+        }
+      }
+    }
+  }, [board, started, displayWinner, isDraw])
+
   return (
     <div
       className="board"
