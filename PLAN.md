@@ -85,7 +85,7 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 
 ### Phase 13 — Code Quality & CI
 - Increase test coverage: timer expiry win path, scoreboard increments, history toggling, starter selector disabled when mid-game.
-- GitHub Actions CI for lint, build, and test on PRs.
+- GitHub Actions CI for lint, build, and test on PRs. (done: `.github/workflows/ci.yml`)
 
 ## Brainstormed Ideas (Backlog)
 - 4x4 and 5x5 boards with dynamic win condition (e.g., 3-in-a-row on 3x3, 4-in-a-row on 5x5); reuse 2D utilities.
@@ -97,4 +97,4 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 ## Open Items From Current Phases
 - Keyboard accessibility for cells and reset (Phase 3): pending
 - Optional theming system choice (Phase 5): pending (currently plain CSS)
-- CI pipeline (Phase 7): pending
+- CI pipeline (Phase 7): done
