@@ -5,9 +5,47 @@
   padding: 1rem;
 }
 
+/* Background decorations */
+.background-decor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.edge-grid {
+  position: absolute;
+  inset: -10% -10%;
+  background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0) 85%);
+}
+
+.background-decor .o-shape {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  left: -140px;
+  top: -120px;
+  filter: blur(1px) drop-shadow(0 0 60px rgba(103,210,255,0.25));
+}
+
+.background-decor .x-shape {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  right: -120px;
+  bottom: -100px;
+  filter: blur(1px) drop-shadow(0 0 60px rgba(255,195,97,0.22));
+}
+
 .header {
   text-align: center;
   margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .title {
@@ -32,6 +70,8 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 .reset {
@@ -64,6 +104,8 @@
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.35);
   margin: 0 auto; /* center board */
+  position: relative;
+  z-index: 1;
 }
 
 .board-wrap {
@@ -138,6 +180,7 @@
   border-radius: 10px;
   background: rgba(255,255,255,0.03);
   position: relative; /* anchor history menu */
+  z-index: 1;
 }
 
 .form-row {

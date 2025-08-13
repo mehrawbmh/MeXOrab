@@ -5,6 +5,7 @@ import { BOARD_SIZE, MOVE_TIME_MS } from '@/constants'
 import { useRoundFlow } from '@/hooks/useRoundFlow'
 import { useGameTimer } from '@/hooks/useGameTimer'
 import { Board } from '@/components/Board'
+import { BackgroundDecor } from '@/components/Background'
 import { EndOverlay, StartOverlay } from '@/components/Overlays'
 
 function App() {
@@ -135,6 +136,7 @@ function App() {
 
   return (
     <div className="app">
+      <BackgroundDecor />
       <header className="header">
         <h1 className="title">MeXOrab</h1>
         <p className="subtitle">simple XO game created by Mehrab</p>
