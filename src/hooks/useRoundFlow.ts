@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ROUND_END_DISPLAY_MS } from '../constants'
+import { ROUND_END_DISPLAY_MS } from '@/constants'
 
 export function useRoundFlow(params: {
   started: boolean

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { type Board2D } from '../game'
-import { BOARD_SIZE } from '../constants'
+import { type Board2D } from '@/game'
+import { BOARD_SIZE } from '@/constants'
 
 export type BoardProps = {
   board: Board2D

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { TICK_INTERVAL_MS } from '../constants'
+import { TICK_INTERVAL_MS } from '@/constants'
 
 export function useGameTimer(deadlineTs: number | null) {
   const [nowTs, setNowTs] = useState<number>(() => Date.now())
