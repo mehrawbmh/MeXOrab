@@ -76,7 +76,8 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.35));
+  background: linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.55));
+  backdrop-filter: blur(6px);
   z-index: 10;
 }
 
@@ -86,8 +87,9 @@
   font-weight: 800;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.06);
+  background: linear-gradient(135deg, rgba(103,210,255,0.3), rgba(255,195,97,0.3));
   color: #fff;
+  transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cell {
@@ -195,6 +197,55 @@
   color: inherit;
   font-size: 1.1rem;
   line-height: 1;
+}
+
+.start-form {
+  width: min(92vw, 440px);
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: linear-gradient(180deg, #171717, #0f0f0f);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+
+.start-form label {
+  font-weight: 700;
+}
+
+.start-form .text {
+  width: 100%;
+}
+
+.start-form .play-button-large {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.play-button-large:hover {
+  background: linear-gradient(135deg, rgba(103,210,255,0.45), rgba(255,195,97,0.45));
+  border-color: rgba(255,255,255,0.32);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.06) inset;
+}
+
+.play-button-large:active {
+  transform: translateY(1px);
+}
+
+.link {
+  margin-top: 2px;
+  background: transparent;
+  border: none;
+  color: #9bd3ff;
+  text-decoration: underline;
+  font-weight: 600;
+  padding: 0.25rem 0.1rem;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: #c9e7ff;
 }
 
 .history-menu {

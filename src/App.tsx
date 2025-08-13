@@ -279,7 +279,20 @@ function App() {
         />
       )}
 
-      {!started && <StartOverlay onPlay={() => setStarted(true)} />}
+      {!started && (
+        <StartOverlay
+          initialXName={playerXName}
+          initialOName={playerOName}
+          onPlay={({ xName, oName }) => {
+            setPlayerXName(xName)
+            setPlayerOName(oName)
+            setStarted(true)
+          }}
+          onSkip={() => {
+            setStarted(true)
+          }}
+        />
+      )}
     </div>
   )
 }
