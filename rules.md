@@ -64,6 +64,15 @@ This document codifies how we build and maintain MeXOrab (XO game). It’s the s
 - Branching: small feature branches; PRs target `main`.
 - Do not commit secrets.
 
+## Development Workflow (mandatory order)
+- **Run dev server during active development**: `npm run dev`.
+- **Before every commit and push, always follow this exact order**:
+  1. **Tests**: `npm run test` (or `npm run test:ui` when iterating). Fix failures before continuing.
+  2. **Build**: `npm run build`. Fix type or build errors before continuing.
+  3. **Commit**: `git add -A && git commit -m "<conventional message>"`.
+  4. **Push**: `git push`.
+- **Never change this order**. Every repository and change should use the same sequence: tests → build → commit → push.
+
 ## Accessibility (A11y)
 - Pending Phase 8, but enforce:
   - Roles/labels on interactive elements, keyboard reachability.
