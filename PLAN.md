@@ -68,7 +68,7 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 ### Phase 9 — Theming and Settings
 - Light/Dark theme toggle; persist preference in `localStorage`.
 - Configurable per-move timer (off/5s/10s/custom) using a settings panel.
-- Name presets and quick-switch; starter preference per round or alternate automatically.
+- also having the light/dark theme in setting panel
 
 ### Phase 10 — Game Modes
 - vs Computer (simple AI: random, then minimax for optimal play).
