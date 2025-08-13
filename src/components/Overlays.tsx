@@ -23,7 +23,8 @@ export function StartOverlay(props: StartOverlayProps) {
   }
 
   return (
-    <div className="start-overlay">
+    <div className="start-overlay" role="dialog" aria-labelledby="start-title" aria-modal="true">
+      <h2 id="start-title" style={{ position: 'absolute', left: -9999, top: -9999 }}>Start game</h2>
       <form onSubmit={handleSubmit} className="start-form" aria-label="Start game">
         <label htmlFor="start-x-name">X name</label>
         <input
@@ -53,7 +54,7 @@ export function StartOverlay(props: StartOverlayProps) {
 
 export function EndOverlay(props: { message: string; showConfetti?: boolean }) {
   return (
-    <div className="win-overlay" aria-live="polite">
+    <div className="win-overlay" role="status" aria-live="polite" aria-atomic="true">
       <div className="win-message">{props.message}</div>
       {props.showConfetti && <div className="confetti" aria-hidden="true" />}
     </div>

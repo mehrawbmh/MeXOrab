@@ -118,7 +118,7 @@ export function Board(props: BoardProps) {
       if (next !== null) {
         focusIndex(next)
       }
-    } else if (key === ' ' || key === 'Spacebar') {
+    } else if (key === ' ' || key === 'Spacebar' || key === 'Enter') {
       if (focusedIndex != null) {
         event.preventDefault()
         const btn = cellRefs.current[focusedIndex]

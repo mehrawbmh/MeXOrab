@@ -157,7 +157,7 @@ function App() {
             : `Next: ${currentPlayer() === 'X' ? playerXName : playerOName}`}
         </div>
         {timerActive && (
-          <div className="timer" aria-label="Time remaining">
+          <div className="timer" role="status" aria-live="polite" aria-atomic="true" aria-label="Time remaining">
             {(remainingMs / 1000).toFixed(1)}s
           </div>
         )}
