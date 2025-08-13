@@ -117,28 +117,33 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadlineTs, nowTs, stepNumber, history.length, result, board, forcedWinner, started])
 
-  // Auto reset 1s after a win and credit scoreboard for normal (non-timeout) wins
+  // After a round finishes, show result for 3s, then stop and show Play
   useEffect(() => {
-    if (!displayWinner) return
+    if (!started) return
+    if (!displayWinner && !isDraw) return
     if (resetTimerRef.current) {
       clearTimeout(resetTimerRef.current)
       resetTimerRef.current = null
     }
     const id = window.setTimeout(() => {
-      if (!forcedWinner && result) {
+      if (displayWinner && !forcedWinner && result) {
         setScore((s) => ({ ...s, [result.winner]: s[result.winner] + 1 }))
+      } else if (isDraw) {
+        setScore((s) => ({ ...s, Draws: s.Draws + 1 }))
       }
+      setStarted(false)
       setHistory([Array<CellValue>(9).fill(null)])
       setStepNumber(0)
       setForcedWinner(null)
-    }, 1000)
+      setDeadlineTs(null)
+    }, 3000)
     resetTimerRef.current = id
     return () => {
       clearTimeout(id)
       resetTimerRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayWinner])
+  }, [displayWinner, isDraw, started])
 
   return (
     <div className="app">
@@ -215,16 +220,11 @@ function App() {
             value={startingPlayer}
             onChange={(e) => setStartingPlayer(e.target.value as 'X' | 'O')}
             disabled={stepNumber !== 0}
-            aria-describedby={stepNumber !== 0 ? 'starter-help' : undefined}
           >
             <option value="X">X</option>
             <option value="O">O</option>
           </select>
-          {stepNumber !== 0 && (
-            <span id="starter-help" className="help">
-              Change starter when a new game begins
-            </span>
-          )}
+          {/* helper removed per request */}
           
         </div>
 
