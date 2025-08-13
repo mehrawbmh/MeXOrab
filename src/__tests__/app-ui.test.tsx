@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 vi.mock('@/hooks/useGameTimer', () => ({
   useGameTimer: () => ({ nowTs: Date.now(), remainingMs: 0 })
@@ -19,7 +19,6 @@ describe('App UI flow', () => {
   })
 
   it('shows win overlay and hides after 2s, then shows Play again', async () => {
-    // Use real timers for this flow to avoid async deadlocks
     const user = userEvent.setup()
     render(<App />)
     await user.click(getPlayButton())
@@ -33,7 +32,6 @@ describe('App UI flow', () => {
 
     expect(screen.getByText(/wins/i)).toBeInTheDocument()
 
-    await new Promise((r) => setTimeout(r, 2200))
-    expect(getPlayButton()).toBeInTheDocument()
+    await waitFor(() => expect(getPlayButton()).toBeInTheDocument(), { timeout: 3000 })
   })
 })
