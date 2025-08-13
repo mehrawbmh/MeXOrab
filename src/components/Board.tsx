@@ -18,6 +18,7 @@ export function Board(props: BoardProps) {
   // Keyboard navigation state and refs
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
+  const gridRef = useRef<HTMLDivElement | null>(null)
 
   function focusIndex(index: number | null): void {
     setFocusedIndex(index)
@@ -65,6 +66,13 @@ export function Board(props: BoardProps) {
   useEffect(() => {
     if (!started) setFocusedIndex(null)
   }, [started])
+
+  // Auto-focus the grid when play starts so arrow/space work immediately
+  useEffect(() => {
+    if (started && !displayWinner && !isDraw) {
+      gridRef.current?.focus()
+    }
+  }, [started, displayWinner, isDraw])
 
   const buttons: ReactNode[] = []
   cellRefs.current = []
@@ -125,6 +133,7 @@ export function Board(props: BoardProps) {
       role="grid"
       aria-label="Tic Tac Toe board"
       aria-describedby="status"
+      ref={gridRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onFocus={handleGridFocus}
