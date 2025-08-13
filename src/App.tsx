@@ -1,14 +1,20 @@
 import './App.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { calculateWinner, type CellValue } from './game'
+import { useEffect, useRef, useState } from 'react'
+import { calculateWinner1D, to2D, type CellValue } from './game'
+import { BOARD_SIZE, MOVE_TIME_MS } from './constants'
+import { useRoundFlow } from './hooks/useRoundFlow'
+import { useGameTimer } from './hooks/useGameTimer'
+import { Board } from './components/Board'
+import { EndOverlay, StartOverlay } from './components/Overlays'
 
 function App() {
   // History and navigation
-  const [history, setHistory] = useState<CellValue[][]>([
-    Array<CellValue>(9).fill(null),
-  ])
+  const NUM_CELLS = BOARD_SIZE * BOARD_SIZE
+  const emptyBoard1D = () => Array<CellValue>(NUM_CELLS).fill(null)
+  const [history, setHistory] = useState<CellValue[][]>([emptyBoard1D()])
   const [stepNumber, setStepNumber] = useState<number>(0)
   const board = history[stepNumber]
+  const board2D = to2D(board, BOARD_SIZE)
 
   // Start gate
   const [started, setStarted] = useState<boolean>(false)
@@ -26,19 +32,14 @@ function App() {
   const [historyOpen, setHistoryOpen] = useState<boolean>(false)
   const resetTimerRef = useRef<number | null>(null)
 
-  const result = calculateWinner(board)
+  const result = calculateWinner1D(board)
   const isDraw = !result && board.every((c) => c !== null)
   const winningLine = result?.line ?? null
   const displayWinner: 'X' | 'O' | null = forcedWinner ?? result?.winner ?? null
 
-  // Timer per move (5 seconds)
-  const MOVE_TIME_MS = 5000
+  // Timer per move
   const [deadlineTs, setDeadlineTs] = useState<number | null>(null)
-  const [nowTs, setNowTs] = useState<number>(() => Date.now())
-  const remainingMs = useMemo(() => {
-    if (!deadlineTs) return 0
-    return Math.max(0, deadlineTs - nowTs)
-  }, [deadlineTs, nowTs])
+  const { nowTs, remainingMs } = useGameTimer(deadlineTs)
   const timerActive = Boolean(deadlineTs) && !displayWinner && !isDraw && started
 
   function currentPlayer(): 'X' | 'O' {
@@ -46,7 +47,8 @@ function App() {
     return isEven ? startingPlayer : startingPlayer === 'X' ? 'O' : 'X'
   }
 
-  function handleCellClick(index: number): void {
+  function handleCellClick(row: number, col: number): void {
+    const index = row * BOARD_SIZE + col
     if (result || board[index] !== null) return
     const nextBoard = board.slice()
     nextBoard[index] = currentPlayer()
@@ -65,7 +67,7 @@ function App() {
       setScore((s) => ({ ...s, Draws: s.Draws + 1 }))
     }
     // Reset history and step
-    setHistory([Array<CellValue>(9).fill(null)])
+    setHistory([emptyBoard1D()])
     setStepNumber(0)
     setForcedWinner(null)
     setDeadlineTs(null)
@@ -84,11 +86,7 @@ function App() {
   }
 
   // Ticker (only while timer is active)
-  useEffect(() => {
-    if (!timerActive) return
-    const id = window.setInterval(() => setNowTs(Date.now()), 100)
-    return () => window.clearInterval(id)
-  }, [timerActive])
+  // ticker moved to useGameTimer hook
 
   // Reset deadline whenever it's a playable latest position without result
   useEffect(() => {
@@ -117,33 +115,23 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadlineTs, nowTs, stepNumber, history.length, result, board, forcedWinner, started])
 
-  // After a round finishes, show result for 3s, then stop and show Play
-  useEffect(() => {
-    if (!started) return
-    if (!displayWinner && !isDraw) return
-    if (resetTimerRef.current) {
-      clearTimeout(resetTimerRef.current)
-      resetTimerRef.current = null
-    }
-    const id = window.setTimeout(() => {
-      if (displayWinner && !forcedWinner && result) {
-        setScore((s) => ({ ...s, [result.winner]: s[result.winner] + 1 }))
-      } else if (isDraw) {
-        setScore((s) => ({ ...s, Draws: s.Draws + 1 }))
-      }
+  // End-of-round flow hook
+  useRoundFlow({
+    started,
+    displayWinner,
+    isDraw,
+    forcedWinner,
+    result,
+    creditWin: (w) => setScore((s) => ({ ...s, [w]: s[w] + 1 })),
+    creditDraw: () => setScore((s) => ({ ...s, Draws: s.Draws + 1 })),
+    onStopAndReset: () => {
       setStarted(false)
-      setHistory([Array<CellValue>(9).fill(null)])
+      setHistory([emptyBoard1D()])
       setStepNumber(0)
       setForcedWinner(null)
       setDeadlineTs(null)
-    }, 2000)
-    resetTimerRef.current = id
-    return () => {
-      clearTimeout(id)
-      resetTimerRef.current = null
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayWinner, isDraw, started])
+    },
+  })
 
   return (
     <div className="app">
@@ -245,29 +233,14 @@ function App() {
       </section>
 
       <div className="board-wrap">
-        <div
-          className="board"
-          role="grid"
-          aria-label="Tic Tac Toe board"
-          aria-describedby="status"
-        >
-          {board.map((value, index) => (
-            <button
-              key={index}
-              role="gridcell"
-              className={[
-                'cell',
-                value === 'X' ? 'x' : value === 'O' ? 'o' : '',
-                winningLine && winningLine.includes(index) ? 'win' : '',
-              ].join(' ').trim()}
-              aria-label={`cell ${index + 1}`}
-              onClick={() => handleCellClick(index)}
-              disabled={!started || Boolean(displayWinner) || isDraw || value !== null}
-            >
-              {value ?? ''}
-            </button>
-          ))}
-        </div>
+        <Board
+          board={board2D}
+          winningLine={winningLine}
+          started={started}
+          displayWinner={displayWinner}
+          isDraw={isDraw}
+          onCellClick={handleCellClick}
+        />
       </div>
 
       <section
@@ -296,23 +269,17 @@ function App() {
       </section>
 
       {(displayWinner || isDraw) && (
-        <div className="win-overlay" aria-live="polite">
-          <div className="win-message">
-            {isDraw
+        <EndOverlay
+          message={
+            isDraw
               ? 'Game draw'
-              : `${displayWinner === 'X' ? playerXName : playerOName} wins!`}
-          </div>
-          {!isDraw && <div className="confetti" aria-hidden="true" />}
-        </div>
+              : `${displayWinner === 'X' ? playerXName : playerOName} wins!`
+          }
+          showConfetti={!isDraw}
+        />
       )}
 
-      {!started && (
-        <div className="start-overlay">
-          <button className="play-button-large" onClick={() => setStarted(true)}>
-            ▶ Play
-          </button>
-        </div>
-      )}
+      {!started && <StartOverlay onPlay={() => setStarted(true)} />}
     </div>
   )
 }

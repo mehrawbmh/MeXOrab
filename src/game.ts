@@ -1,11 +1,12 @@
 export type CellValue = 'X' | 'O' | null
+export type Board2D = CellValue[][]
 
 export type WinnerResult = {
   winner: 'X' | 'O'
   line: [number, number, number]
 } | null
 
-const WIN_LINES: Array<[number, number, number]> = [
+const WIN_LINES_1D: Array<[number, number, number]> = [
   // rows
   [0, 1, 2],
   [3, 4, 5],
@@ -19,12 +20,70 @@ const WIN_LINES: Array<[number, number, number]> = [
   [2, 4, 6],
 ]
 
-export function calculateWinner(board: CellValue[]): WinnerResult {
-  for (const [a, b, c] of WIN_LINES) {
+export function calculateWinner1D(board: CellValue[]): WinnerResult {
+  for (const [a, b, c] of WIN_LINES_1D) {
     const va = board[a]
     if (va && va === board[b] && va === board[c]) {
       return { winner: va, line: [a, b, c] }
     }
   }
   return null
+}
+
+export function to1D(board: Board2D): CellValue[] {
+  return board.flat()
+}
+
+export function to2D(board: CellValue[], size: number): Board2D {
+  const rows: Board2D = []
+  for (let r = 0; r < size; r++) {
+    rows.push(board.slice(r * size, (r + 1) * size))
+  }
+  return rows
+}
+
+export function calculateWinner2D(board: Board2D): WinnerResult {
+  const size = board.length
+  // rows
+  for (let r = 0; r < size; r++) {
+    const first = board[r][0]
+    if (!first) continue
+    let allEqual = true
+    for (let c = 1; c < size; c++) {
+      if (board[r][c] !== first) { allEqual = false; break }
+    }
+    if (allEqual) {
+      return { winner: first, line: [0, 1, 2].map((c) => r * size + c) as [number, number, number] }
+    }
+  }
+  // cols
+  for (let c = 0; c < size; c++) {
+    const first = board[0][c]
+    if (!first) continue
+    let allEqual = true
+    for (let r = 1; r < size; r++) {
+      if (board[r][c] !== first) { allEqual = false; break }
+    }
+    if (allEqual) {
+      return { winner: first, line: [0, 1, 2].map((r) => r * size + c) as [number, number, number] }
+    }
+  }
+  // diagonals
+  {
+    const first = board[0][0]
+    if (first && board[1][1] === first && board[2][2] === first) {
+      return { winner: first, line: [0, 4, 8] }
+    }
+  }
+  {
+    const first = board[0][2]
+    if (first && board[1][1] === first && board[2][0] === first) {
+      return { winner: first, line: [2, 4, 6] }
+    }
+  }
+  return null
+}
+
+export function createEmptyBoard2D(size: number): Board2D {
+  return Array.from({ length: size }, () => Array<CellValue>(size).fill(null))
 }
