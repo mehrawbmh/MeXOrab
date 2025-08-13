@@ -18,7 +18,6 @@ export function Board(props: BoardProps) {
   // Keyboard navigation state and refs
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
-  const gridRef = useRef<HTMLDivElement | null>(null)
 
   function focusIndex(index: number | null): void {
     setFocusedIndex(index)
@@ -67,10 +66,11 @@ export function Board(props: BoardProps) {
     if (!started) setFocusedIndex(null)
   }, [started])
 
-  // Auto-focus the grid when play starts so arrow/space work immediately
+  // When play starts, move focus to the first enabled cell
   useEffect(() => {
     if (started && !displayWinner && !isDraw) {
-      gridRef.current?.focus()
+      const first = getNextIndex(null, 'ArrowRight')
+      if (first != null) focusIndex(first)
     }
   }, [started, displayWinner, isDraw])
 
@@ -120,19 +120,12 @@ export function Board(props: BoardProps) {
     }
   }
 
-  function handleGridFocus(): void {
-    if (focusedIndex == null) {
-      const first = getNextIndex(null, 'ArrowRight')
-      if (first != null) focusIndex(first)
-    }
-  }
+  // removed handleGridFocus; we programmatically move focus
 
   // After a move, the previously focused cell may become disabled.
   // Keep the grid focused and move focus to a valid cell to maintain keyboard flow.
   useEffect(() => {
     if (!started || displayWinner || isDraw) return
-    // Ensure grid retains focus for key handling
-    gridRef.current?.focus()
     // If focused cell is now disabled, move to the first enabled cell
     if (focusedIndex != null) {
       const btn = cellRefs.current[focusedIndex]
@@ -154,10 +147,8 @@ export function Board(props: BoardProps) {
       role="grid"
       aria-label="Tic Tac Toe board"
       aria-describedby="status"
-      ref={gridRef}
-      tabIndex={0}
+      tabIndex={-1}
       onKeyDown={handleKeyDown}
-      onFocus={handleGridFocus}
     >
       {buttons}
     </div>
