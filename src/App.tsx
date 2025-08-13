@@ -136,7 +136,7 @@ function App() {
       setStepNumber(0)
       setForcedWinner(null)
       setDeadlineTs(null)
-    }, 3000)
+    }, 2000)
     resetTimerRef.current = id
     return () => {
       clearTimeout(id)
@@ -295,12 +295,14 @@ function App() {
         </div>
       </section>
 
-      {displayWinner && (
+      {(displayWinner || isDraw) && (
         <div className="win-overlay" aria-live="polite">
           <div className="win-message">
-            {displayWinner === 'X' ? playerXName : playerOName} wins!
+            {isDraw
+              ? 'Game draw'
+              : `${displayWinner === 'X' ? playerXName : playerOName} wins!`}
           </div>
-          <div className="confetti" aria-hidden="true" />
+          {!isDraw && <div className="confetti" aria-hidden="true" />}
         </div>
       )}
 
