@@ -1,11 +1,11 @@
-import './App.css'
+import '@/App.css'
 import { useEffect, useRef, useState } from 'react'
-import { calculateWinner1D, to2D, type CellValue } from './game'
-import { BOARD_SIZE, MOVE_TIME_MS } from './constants'
-import { useRoundFlow } from './hooks/useRoundFlow'
-import { useGameTimer } from './hooks/useGameTimer'
-import { Board } from './components/Board'
-import { EndOverlay, StartOverlay } from './components/Overlays'
+import { calculateWinner1D, to2D, type CellValue } from '@/game'
+import { BOARD_SIZE, MOVE_TIME_MS } from '@/constants'
+import { useRoundFlow } from '@/hooks/useRoundFlow'
+import { useGameTimer } from '@/hooks/useGameTimer'
+import { Board } from '@/components/Board'
+import { EndOverlay, StartOverlay } from '@/components/Overlays'
 
 function App() {
   // History and navigation
