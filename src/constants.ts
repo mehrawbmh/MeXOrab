@@ -2,6 +2,7 @@ export const BOARD_SIZE = 3;
 export const MOVE_TIME_MS = 5000; // per move
 export const TICK_INTERVAL_MS = 100; // ticker frequency for timer
 export const ROUND_END_DISPLAY_MS = 2000; // show win/draw overlay
+export const RESULT_TOAST_MS = 1000; // show compact result toast before reset
 
 // Theme palette for X/O branding and accents
 export const THEME_COLORS = {

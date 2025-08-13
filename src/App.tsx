@@ -1,12 +1,12 @@
 import '@/App.css'
 import { useEffect, useRef, useState } from 'react'
 import { calculateWinner1D, to2D, type CellValue } from '@/game'
-import { BOARD_SIZE, MOVE_TIME_MS } from '@/constants'
+import { BOARD_SIZE, MOVE_TIME_MS, RESULT_TOAST_MS } from '@/constants'
 import { useRoundFlow } from '@/hooks/useRoundFlow'
 import { useGameTimer } from '@/hooks/useGameTimer'
 import { Board } from '@/components/Board'
 import { BackgroundDecor } from '@/components/Background'
-import { EndOverlay, StartOverlay } from '@/components/Overlays'
+import { EndOverlay, StartOverlay, ResultToast } from '@/components/Overlays'
 
 function App() {
   // History and navigation
@@ -37,6 +37,8 @@ function App() {
   const isDraw = !result && board.every((c) => c !== null)
   const winningLine = result?.line ?? null
   const displayWinner: 'X' | 'O' | null = forcedWinner ?? result?.winner ?? null
+  const hasResult = Boolean(displayWinner || isDraw)
+  const [showToast, setShowToast] = useState<boolean>(false)
 
   // Timer per move
   const [deadlineTs, setDeadlineTs] = useState<number | null>(null)
@@ -133,6 +135,14 @@ function App() {
       setDeadlineTs(null)
     },
   })
+
+  // Show a brief toast for 1s before the end overlay
+  useEffect(() => {
+    if (!started || !hasResult) return
+    setShowToast(true)
+    const id = window.setTimeout(() => setShowToast(false), RESULT_TOAST_MS)
+    return () => clearTimeout(id)
+  }, [started, hasResult])
 
   return (
     <div className="app">
@@ -270,7 +280,17 @@ function App() {
         </div>
       </section>
 
-      {(displayWinner || isDraw) && (
+      {showToast && (
+        <ResultToast
+          message={
+            isDraw
+              ? 'Draw'
+              : `${displayWinner === 'X' ? playerXName : playerOName} wins`
+          }
+        />
+      )}
+
+      {(displayWinner || isDraw) && !showToast && (
         <EndOverlay
           message={
             isDraw

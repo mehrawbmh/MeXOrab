@@ -12,15 +12,24 @@ function getPlayButton() {
 
 describe('App UI flow', () => {
   it('shows start overlay and starts on Play', async () => {
+    const user = userEvent.setup()
     render(<App />)
     expect(getPlayButton()).toBeInTheDocument()
-    await userEvent.click(getPlayButton())
+    // Fill names then play
+    const xInput = screen.getByLabelText(/x name/i, { selector: '#start-x-name' })
+    const oInput = screen.getByLabelText(/o name/i, { selector: '#start-o-name' })
+    await user.clear(xInput)
+    await user.type(xInput, 'Alice')
+    await user.clear(oInput)
+    await user.type(oInput, 'Bob')
+    await user.click(getPlayButton())
     expect(screen.queryByRole('button', { name: /play/i })).not.toBeInTheDocument()
   })
 
-  it('shows win overlay and hides after 2s, then shows Play again', async () => {
+  it('shows toast then overlay then Play after 2s', async () => {
     const user = userEvent.setup()
     render(<App />)
+    // Start game quickly (skip names)
     await user.click(getPlayButton())
 
     // Make X win quickly: top row 0,1,2
@@ -30,8 +39,11 @@ describe('App UI flow', () => {
       await user.click(cells[idx])
     }
 
-    expect(screen.getByText(/wins/i)).toBeInTheDocument()
-
+    // Toast should appear first
+    expect(screen.getByText(/wins$/i)).toBeInTheDocument()
+    // Then overlay appears after toast hides, still within overall flow
+    await waitFor(() => expect(screen.getByText(/wins!/i)).toBeInTheDocument(), { timeout: 1500 })
+    // And eventually Play returns
     await waitFor(() => expect(getPlayButton()).toBeInTheDocument(), { timeout: 3000 })
   })
 })

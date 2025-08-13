@@ -60,3 +60,13 @@ export function EndOverlay(props: { message: string; showConfetti?: boolean }) {
     </div>
   )
 }
+
+export function ResultToast(props: { message: string }) {
+  return (
+    <div className="result-toast" role="status" aria-live="polite" aria-atomic="true">
+      <button className="toast-chip" tabIndex={-1} aria-hidden>
+        {props.message}
+      </button>
+    </div>
+  )
+}
