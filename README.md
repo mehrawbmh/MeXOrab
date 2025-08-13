@@ -45,6 +45,19 @@ npm run test:ui
 
 Then open the app and hit Play. Winner/draw is shown for 2 seconds, then the next round awaits.
 
+## 🐳 Container (Docker)
+
+```bash
+# Build image
+docker build -t mexorab .
+
+# Run container (serves on port 80 in the container)
+docker run --rm -p 8080:80 mexorab
+# Open http://localhost:8080
+```
+
+The image is multi-stage: it builds the app with Node and serves the static `dist/` via NGINX with an SPA fallback.
+
 ## 🧩 Architecture
 
 - `src/constants.ts`: all magic numbers live here (board size, timers)

@@ -56,6 +56,7 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 - Absolute imports with `@` alias: done
 - Tests: added for winner logic and key UI flows; expand coverage
 - Remaining from earlier phases: keyboard accessibility, optional theming system
+ - Packaging (Phase 7): CI present; Dockerfile + container docs added
 
 ## Next Phases
 
