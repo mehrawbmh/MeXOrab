@@ -40,25 +40,32 @@ export function Board(props: BoardProps) {
     }
     const row = Math.floor(current / BOARD_SIZE)
     const col = current % BOARD_SIZE
-    let nextRow = row
-    let nextCol = col
+    let deltaRow = 0
+    let deltaCol = 0
     switch (key) {
       case 'ArrowUp':
-        nextRow = Math.max(0, row - 1)
+        deltaRow = -1
         break
       case 'ArrowDown':
-        nextRow = Math.min(BOARD_SIZE - 1, row + 1)
+        deltaRow = 1
         break
       case 'ArrowLeft':
-        nextCol = Math.max(0, col - 1)
+        deltaCol = -1
         break
       case 'ArrowRight':
-        nextCol = Math.min(BOARD_SIZE - 1, col + 1)
+        deltaCol = 1
         break
     }
-    const candidate = nextRow * BOARD_SIZE + nextCol
-    const btn = cellRefs.current[candidate]
-    if (btn && !btn.disabled) return candidate
+    // Scan forward along the direction to find the first enabled cell
+    let r = row + deltaRow
+    let c = col + deltaCol
+    while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+      const candidate = r * BOARD_SIZE + c
+      const btn = cellRefs.current[candidate]
+      if (btn && !btn.disabled) return candidate
+      r += deltaRow
+      c += deltaCol
+    }
     return current
   }
 
