@@ -19,7 +19,7 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 - Add reset button.
 - Highlight winning line.
 - Add hover/active animations and basic responsive styles.
-- Keyboard accessibility for cells and reset.
+- Keyboard accessibility for cells and reset. (done: grid focus, arrow-key navigation, Space to place)
 - Commit.
 
 ## Phase 4 — Game Enhancements
