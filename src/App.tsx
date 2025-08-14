@@ -1,12 +1,15 @@
 import '@/App.css'
 import { useEffect, useRef, useState } from 'react'
-import { calculateWinner1D, to2D, type CellValue } from '@/game'
-import { BOARD_SIZE, MOVE_TIME_MS, RESULT_TOAST_MS } from '@/constants'
+import { calculateWinner1D, to2D, type CellValue, pickRandomMove, minimax } from '@/game'
+import { BOARD_SIZE, MOVE_TIME_MS, RESULT_TOAST_MS, DEFAULTS, type GameMode, type TimerOption, timerOptionToMs } from '@/constants'
 import { useRoundFlow } from '@/hooks/useRoundFlow'
 import { useGameTimer } from '@/hooks/useGameTimer'
 import { Board } from '@/components/Board'
 import { BackgroundDecor } from '@/components/Background'
 import { EndOverlay, StartOverlay, ResultToast } from '@/components/Overlays'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useApplyQueryParams, setQueryParams } from '@/hooks/useQueryParams'
+import { useAudio } from '@/hooks/useAudio'
 
 function App() {
   // History and navigation
@@ -22,8 +25,12 @@ function App() {
 
   // Players and starter
   const [startingPlayer, setStartingPlayer] = useState<'X' | 'O'>('X')
-  const [playerXName, setPlayerXName] = useState<string>('Player X')
-  const [playerOName, setPlayerOName] = useState<string>('Player O')
+  const [playerXName, setPlayerXName] = useState<string>(() => {
+    try { const p = new URLSearchParams(window.location.search); return p.get('x') || 'Player X' } catch { return 'Player X' }
+  })
+  const [playerOName, setPlayerOName] = useState<string>(() => {
+    try { const p = new URLSearchParams(window.location.search); return p.get('o') || 'Player O' } catch { return 'Player O' }
+  })
 
   // Scoreboard
   const [score, setScore] = useState<{ X: number; O: number; Draws: number}>(
@@ -32,6 +39,16 @@ function App() {
   const [forcedWinner, setForcedWinner] = useState<'X' | 'O' | null>(null)
   const [historyOpen, setHistoryOpen] = useState<boolean>(false)
   const resetTimerRef = useRef<number | null>(null)
+  const seriesResetQueuedRef = useRef<boolean>(false)
+
+  // Phase 10: game modes and series
+  const modeState = useLocalStorage<GameMode>('mode', DEFAULTS.mode)
+  const timerState = useLocalStorage<TimerOption>('timer', DEFAULTS.timer)
+  const bestOfState = useLocalStorage<1 | 3 | 5>('bestOf', DEFAULTS.bestOf)
+  const soundState = useLocalStorage<boolean>('sound', DEFAULTS.sound)
+  const { playPlace, playWin, playDraw } = useAudio(soundState.value)
+  const [seriesWins, setSeriesWins] = useState<{ X: number; O: number }>({ X: 0, O: 0 })
+  const seriesTarget = Math.ceil(bestOfState.value / 2)
 
   const result = calculateWinner1D(board)
   const isDraw = !result && board.every((c) => c !== null)
@@ -60,12 +77,18 @@ function App() {
     nextHistory.push(nextBoard)
     setHistory(nextHistory)
     setStepNumber(nextHistory.length - 1)
+    playPlace()
   }
 
   function resetGame(): void {
     // If game finished, update scoreboard once per reset
     if (result) {
       setScore((s) => ({ ...s, [result.winner]: s[result.winner] + 1 }))
+      setSeriesWins((w) => {
+        const next = { ...w, [result.winner]: w[result.winner] + 1 }
+        if (next.X >= seriesTarget || next.O >= seriesTarget) seriesResetQueuedRef.current = true
+        return next
+      })
     } else if (isDraw) {
       setScore((s) => ({ ...s, Draws: s.Draws + 1 }))
     }
@@ -95,12 +118,13 @@ function App() {
   useEffect(() => {
     const atLatest = stepNumber === history.length - 1
     if (started && atLatest && !result && !forcedWinner) {
-      setDeadlineTs(Date.now() + MOVE_TIME_MS)
+      const ms = timerOptionToMs(timerState.value)
+      setDeadlineTs(ms ? Date.now() + ms : null)
     } else {
       setDeadlineTs(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started, stepNumber, history.length, result, forcedWinner])
+  }, [started, stepNumber, history.length, result, forcedWinner, timerState.value])
 
   // Auto-move or timeout win when time runs out
   useEffect(() => {
@@ -113,6 +137,11 @@ function App() {
       const winner: 'X' | 'O' = loser === 'X' ? 'O' : 'X'
       setForcedWinner(winner)
       setScore((s) => ({ ...s, [winner]: s[winner] + 1 }))
+      setSeriesWins((w) => {
+        const next = { ...w, [winner]: w[winner] + 1 }
+        if (next.X >= seriesTarget || next.O >= seriesTarget) seriesResetQueuedRef.current = true
+        return next
+      })
       setDeadlineTs(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,7 +154,14 @@ function App() {
     isDraw,
     forcedWinner,
     result,
-    creditWin: (w) => setScore((s) => ({ ...s, [w]: s[w] + 1 })),
+    creditWin: (w) => {
+      setScore((s) => ({ ...s, [w]: s[w] + 1 }))
+      setSeriesWins((sw) => {
+        const next = { ...sw, [w]: sw[w] + 1 }
+        if (next.X >= seriesTarget || next.O >= seriesTarget) seriesResetQueuedRef.current = true
+        return next
+      })
+    },
     creditDraw: () => setScore((s) => ({ ...s, Draws: s.Draws + 1 })),
     onStopAndReset: () => {
       setStarted(false)
@@ -133,6 +169,7 @@ function App() {
       setStepNumber(0)
       setForcedWinner(null)
       setDeadlineTs(null)
+      if (seriesResetQueuedRef.current) { setSeriesWins({ X: 0, O: 0 }); seriesResetQueuedRef.current = false }
     },
   })
 
@@ -143,6 +180,50 @@ function App() {
     const id = window.setTimeout(() => setShowToast(false), RESULT_TOAST_MS)
     return () => clearTimeout(id)
   }, [started, hasResult])
+
+  useEffect(() => {
+    if (!hasResult) return
+    if (isDraw) playDraw(); else playWin()
+  }, [hasResult, isDraw, playDraw, playWin])
+
+  useEffect(() => {
+    if (!started) return
+    if (modeState.value === 'human') return
+    const atLatest = stepNumber === history.length - 1
+    if (!atLatest || result || forcedWinner) return
+    const isCpuTurn = currentPlayer() === 'O'
+    if (!isCpuTurn) return
+    const decide = () => {
+      const boardNow = history[history.length - 1]
+      let move: number | null = null
+      if (modeState.value === 'cpu-easy') move = pickRandomMove(boardNow)
+      else move = minimax(boardNow, 'O', 'O').move
+      if (move != null) {
+        const next = boardNow.slice()
+        next[move] = 'O'
+        const nextHistory = history.slice(0, stepNumber + 1)
+        nextHistory.push(next)
+        setHistory(nextHistory)
+        setStepNumber(nextHistory.length - 1)
+        playPlace()
+      }
+    }
+    const id = window.setTimeout(decide, 200)
+    return () => window.clearTimeout(id)
+  }, [started, stepNumber, history, result, forcedWinner, modeState.value, playPlace])
+
+  useApplyQueryParams((params) => {
+    const mx = params.get('mode') as GameMode | null
+    const t = params.get('timer') as TimerOption | null
+    const b = params.get('bestOf')
+    const x = params.get('x')
+    const o = params.get('o')
+    if (mx === 'human' || mx === 'cpu-easy' || mx === 'cpu-hard') modeState.setValue(mx)
+    if (t === 'off' || t === '5' || t === '10') timerState.setValue(t)
+    if (b === '1' || b === '3' || b === '5') bestOfState.setValue(Number(b) as 1 | 3 | 5)
+    if (x) setPlayerXName(x)
+    if (o) setPlayerOName(o)
+  })
 
   return (
     <div className="app">
@@ -224,8 +305,44 @@ function App() {
             <option value="X">X</option>
             <option value="O">O</option>
           </select>
-          {/* helper removed per request */}
-          
+          <label htmlFor="mode">Mode</label>
+          <select
+            id="mode"
+            className="select"
+            value={modeState.value}
+            onChange={(e) => { modeState.setValue(e.target.value as GameMode); setQueryParams({ mode: e.target.value }) }}
+          >
+            <option value="human">2P</option>
+            <option value="cpu-easy">CPU easy</option>
+            <option value="cpu-hard">CPU hard</option>
+          </select>
+
+          <label htmlFor="timer">Timer</label>
+          <select
+            id="timer"
+            className="select"
+            value={timerState.value}
+            onChange={(e) => { timerState.setValue(e.target.value as TimerOption); setQueryParams({ timer: e.target.value }) }}
+          >
+            <option value="off">Off</option>
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+          </select>
+
+          <label htmlFor="bestOf">Best of</label>
+          <select
+            id="bestOf"
+            className="select"
+            value={bestOfState.value}
+            onChange={(e) => { bestOfState.setValue(Number(e.target.value) as 1 | 3 | 5); setSeriesWins({ X: 0, O: 0 }); setQueryParams({ bestOf: e.target.value }) }}
+          >
+            <option value="1">1</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+          </select>
+
+          <label htmlFor="sound">Sound</label>
+          <input id="sound" type="checkbox" checked={soundState.value} onChange={(e) => soundState.setValue(e.target.checked)} />
         </div>
 
         <div className="scoreboard" role="group" aria-label="Scoreboard">
@@ -308,7 +425,9 @@ function App() {
           onPlay={({ xName, oName }) => {
             setPlayerXName(xName)
             setPlayerOName(oName)
+            if (seriesWins.X >= seriesTarget || seriesWins.O >= seriesTarget) setSeriesWins({ X: 0, O: 0 })
             setStarted(true)
+            setQueryParams({ x: xName, o: oName })
           }}
           onSkip={() => {
             setStarted(true)

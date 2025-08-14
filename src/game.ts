@@ -87,3 +87,60 @@ export function calculateWinner2D(board: Board2D): WinnerResult {
 export function createEmptyBoard2D(size: number): Board2D {
   return Array.from({ length: size }, () => Array<CellValue>(size).fill(null))
 }
+
+export function getAvailableMoves(board: CellValue[]): number[] {
+  const indexes: number[] = []
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] === null) indexes.push(i)
+  }
+  return indexes
+}
+
+export function pickRandomMove(board: CellValue[]): number | null {
+  const moves = getAvailableMoves(board)
+  if (moves.length === 0) return null
+  const r = Math.floor(Math.random() * moves.length)
+  return moves[r]
+}
+
+export function minimax(
+  board: CellValue[],
+  currentPlayer: 'X' | 'O',
+  maximizingPlayer: 'X' | 'O'
+): { score: number; move: number | null } {
+  const winner = calculateWinner1D(board)
+  if (winner) {
+    return { score: winner.winner === maximizingPlayer ? 1 : -1, move: null }
+  }
+  if (board.every((c) => c !== null)) return { score: 0, move: null }
+  let bestMove: number | null = null
+  if (currentPlayer === maximizingPlayer) {
+    let bestScore = -Infinity
+    for (const move of getAvailableMoves(board)) {
+      const next = board.slice()
+      next[move] = currentPlayer
+      const nextPlayer = currentPlayer === 'X' ? 'O' : 'X'
+      const { score } = minimax(next, nextPlayer, maximizingPlayer)
+      if (score > bestScore) {
+        bestScore = score
+        bestMove = move
+      }
+      if (bestScore === 1) break
+    }
+    return { score: bestScore, move: bestMove }
+  } else {
+    let bestScore = Infinity
+    for (const move of getAvailableMoves(board)) {
+      const next = board.slice()
+      next[move] = currentPlayer
+      const nextPlayer = currentPlayer === 'X' ? 'O' : 'X'
+      const { score } = minimax(next, nextPlayer, maximizingPlayer)
+      if (score < bestScore) {
+        bestScore = score
+        bestMove = move
+      }
+      if (bestScore === -1) break
+    }
+    return { score: bestScore, move: bestMove }
+  }
+}

@@ -18,9 +18,14 @@ This document codifies how we build and maintain MeXOrab (XO game). It’s the s
 - Hooks:
   - `useGameTimer(deadlineTs)`: exposes `nowTs`, `remainingMs`.
   - `useRoundFlow({...})`: handles end-of-round timing and reset/credit.
+  - `useLocalStorage(key, initial)`: persisted settings.
+  - `useQueryParams`: apply and update query params.
+  - `useAudio(enabled)`: play place/win/draw sounds when enabled.
 - Utilities (in `game.ts`):
   - `calculateWinner1D`, `to2D`, `to1D`, `calculateWinner2D`, `createEmptyBoard2D`.
+  - CPU helpers: `getAvailableMoves`, `pickRandomMove`, `minimax`.
 - Constants (in `constants.ts`): `BOARD_SIZE`, `MOVE_TIME_MS`, `TICK_INTERVAL_MS`, `ROUND_END_DISPLAY_MS`.
+  - Game mode types and defaults: `GameMode`, `TimerOption`, `DEFAULTS`, `timerOptionToMs`.
 
 ## UX Rules
 - Start gate: game only starts when user clicks Play.
@@ -28,6 +33,10 @@ This document codifies how we build and maintain MeXOrab (XO game). It’s the s
 - End-of-round: show overlay for `ROUND_END_DISPLAY_MS` (2s) then stop the app and show Play.
 - Draw overlay shows “Game draw”; no confetti for draws.
 - Scoreboard credits exactly once per round (win or draw), including timeout wins.
+- Series: best-of 1/3/5; series scoreboard increments on round wins; resets automatically when either reaches the target.
+- Timer options: Off/5s/10s; when Off, show no countdown.
+- CPU modes: `human`, `cpu-easy` (random), `cpu-hard` (minimax); CPU plays as O with a small delay.
+- Sounds: enabled via toggle; must not break tests; in tests, `Audio` is stubbed.
 
 ## Coding Conventions
 - TypeScript strict mode; no `any` unless necessary and justified.
@@ -53,6 +62,9 @@ This document codifies how we build and maintain MeXOrab (XO game). It’s the s
 - Guidance:
   - Unit-test core logic (winner, adapters).
   - Integration-test core flows (start, end-of-round overlay hide/show).
+  - Test CPU behavior (easy/hard), series reset, timer Off, and query param application.
+  - Jsdom URL set to `http://localhost/`; use relative `replaceState` for query updates.
+  - Stub `Audio` in `vitest.setup.ts` to avoid unimplemented `HTMLMediaElement.play` errors.
   - Avoid flaky timer tests; prefer `waitFor` over fake-timer coupling unless necessary.
 
 ## CI
