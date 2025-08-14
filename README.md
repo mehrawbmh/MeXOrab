@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./favicon.svg" width="96" height="96" alt="MeXOrab XO" />
+<img src="./public/favicon.svg" width="96" height="96" alt="MeXOrab XO" />
 
 # MeXOrab — a sleek XO (Tic‑Tac‑Toe) in React
 
