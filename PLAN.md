@@ -54,9 +54,14 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 - Core gameplay (3x3), win/draw detection, scoreboard: done
 - Start overlay, end-of-round flow with 2s display and Play: done
 - Absolute imports with `@` alias: done
-- Tests: added for winner logic and key UI flows; expand coverage
-- Remaining from earlier phases: keyboard accessibility, optional theming system
- - Packaging (Phase 7): CI present; Dockerfile + container docs added
+- Game modes: 2P, CPU easy (random), CPU hard (minimax): done
+- Best-of series (1/3/5) with auto reset on series winner: done
+- Timer modes: Off/5s/10s per move: done
+- UX: animations for place/win/draw; sound effects toggle; win confetti: done
+- Persistence & share: settings (mode/timer/bestOf/sound) in localStorage; names via query params; shareable URL: done
+- Tests: winner logic, UI flow, CPU behavior, series reset, timer off, persistence/share: done
+- Remaining from earlier phases: keyboard accessibility polish, optional theming system
+- Packaging (Phase 7): CI present; Dockerfile + container docs added
 
 ## Next Phases
 
@@ -71,21 +76,23 @@ This plan breaks the XO (Tic-Tac-Toe) app into small, iterative phases. Each pha
 - also having the light/dark theme in setting panel
 
 ### Phase 10 — Game Modes
-- vs Computer (simple AI: random, then minimax for optimal play).
-- Best-of-N rounds mode with series scoreboard and series winner banner.
-- “No timer” casual mode.
+- vs Computer (simple AI: random, then minimax for optimal play). (done)
+- Best-of-N rounds mode with series scoreboard and series winner banner. (done)
+- “No timer” casual mode. (done)
 
 ### Phase 11 — UX Enhancements
-- Animations for place/win/draw using CSS transitions only (keep lightweight).
-- Sound effects toggle for place/win/draw.
-- Subtle confetti improvements and draw-specific animation.
+- Animations for place/win/draw using CSS transitions only (keep lightweight). (done)
+- Sound effects toggle for place/win/draw. (done)
+- Subtle confetti improvements. (done)
+- Draw-specific animation. (pending)
 
 ### Phase 12 — Persistence & Share
-- Persist scoreboard, names, and settings in `localStorage` with a `useLocalStorage` hook.
-- Shareable game link for names/settings (query params).
+- Persist settings (mode/timer/bestOf/sound) in `localStorage`. (done)
+- Shareable game link for names/settings (query params). (done)
+- Persist scoreboard and names in `localStorage`. (pending)
 
 ### Phase 13 — Code Quality & CI
-- Increase test coverage: timer expiry win path, scoreboard increments, history toggling, starter selector disabled when mid-game.
+- Increase test coverage: timer expiry win path, scoreboard increments, history toggling, starter selector disabled when mid-game. (ongoing)
 - GitHub Actions CI for lint, build, and test on PRs. (done: `.github/workflows/ci.yml`)
 
 ## Brainstormed Ideas (Backlog)
